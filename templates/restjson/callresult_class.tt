@@ -14,9 +14,15 @@ package [% c.api %]::[% c.shapename_for_operation_output(op_name) %];
   [%- IF (shape.members.$param_name.streaming == 1) %], traits => ['ParamInBody'][% stream_param = param_name %][% END %]
   [%- IF (c.required_in_shape(shape,param_name)) %], required => 1[% END %]);
 [% END %]
+  [%- # Check if the payload member has streaming=1 (binary/blob data)
+      # Don't add _stream_param for regular JSON payloads like Pinpoint
+  -%]
   [%- IF (shape.payload) -%]
+    [%- payload_member = shape.members.item(shape.payload) -%]
+    [%- IF (payload_member.streaming == 1) -%]
   use MooseX::ClassAttribute;
-  class_has _stream_param => (is => 'ro', default => '[% c.to_payload_shape_name(shape.payload) %]');
+  class_has _stream_param => (is => 'ro', default => '[% shape.payload %]');
+    [%- END -%]
   [%- END %]
   has _request_id => (is => 'ro', isa => 'Str');
 [%- END %]
